@@ -1,5 +1,5 @@
-import ImageResizer from 'react-native-image-resizer';
-import {Image as ImageInfo} from 'react-native';
+import ImageResizer from '@bam.tech/react-native-image-resizer';
+import {Image as RNImage} from 'react-native';
 import {getFileSize} from './fileService';
 
 const FORMAT_MAP = {
@@ -11,21 +11,22 @@ const FORMAT_MAP = {
 
 /**
  * Convert an image to a different format
+ * Uses react-native-image-resizer v1.4.x API
  * @param {string} imageUri - source image URI
- * @param {'jpeg'|'png'|'webp'} targetFormat - desired output format
+ * @param {'jpeg'|'png'|'webp'} targetFormat
  * @param {number} quality - 1-100
- * @returns {Promise<{outputUri: string, originalSize: number, convertedSize: number, format: string}>}
+ * @returns {Promise<{outputUri, originalSize, convertedSize, format}>}
  */
 export async function convertImage(imageUri, targetFormat = 'jpeg', quality = 90) {
   const originalSize = await getFileSize(imageUri);
 
-  // Get image dimensions so we can preserve them
   const dimensions = await getImageDimensions(imageUri);
   const width = dimensions.width || 1920;
   const height = dimensions.height || 1080;
 
   const resizerFormat = FORMAT_MAP[targetFormat.toLowerCase()] || 'JPEG';
 
+  // v1.4.x API: createResizedImage(path, maxWidth, maxHeight, format, quality, rotation, outputPath)
   const response = await ImageResizer.createResizedImage(
     imageUri,
     width,
@@ -34,8 +35,6 @@ export async function convertImage(imageUri, targetFormat = 'jpeg', quality = 90
     quality,
     0,
     undefined,
-    false,
-    {mode: 'contain', onlyScaleDown: false},
   );
 
   const convertedSize = await getFileSize(response.uri);
@@ -57,17 +56,17 @@ export async function convertImage(imageUri, targetFormat = 'jpeg', quality = 90
  */
 function getImageDimensions(uri) {
   return new Promise(resolve => {
-    ImageInfo.getSize(
+    RNImage.getSize(
       uri,
       (w, h) => resolve({width: w, height: h}),
-      () => resolve({width: 1920, height: 1080}), // fallback
+      () => resolve({width: 1920, height: 1080}),
     );
   });
 }
 
 /**
  * Returns supported target formats for a given source format
- * @param {string} sourceExt - e.g. 'jpg', 'png', 'webp'
+ * @param {string} sourceExt
  * @returns {string[]}
  */
 export function getAvailableFormats(sourceExt) {
