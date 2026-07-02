@@ -1,14 +1,15 @@
-import ImageResizer from 'react-native-image-resizer';
-import {getFileSize, getExtension, getMimeType} from './fileService';
+import ImageResizer from '@bam.tech/react-native-image-resizer';
+import {getFileSize} from './fileService';
 
 /**
  * Resize an image to custom dimensions
+ * Uses react-native-image-resizer v1.4.x API
  * @param {string} imageUri - source image URI
  * @param {number} width - target width in pixels
  * @param {number} height - target height in pixels
  * @param {number} quality - output quality 1-100
  * @param {'JPEG'|'PNG'|'WEBP'} [format] - output format
- * @returns {Promise<{outputUri: string, originalSize: number, resizedSize: number, width: number, height: number}>}
+ * @returns {Promise<{outputUri, originalSize, resizedSize, width, height}>}
  */
 export async function resizeImage(
   imageUri,
@@ -19,19 +20,15 @@ export async function resizeImage(
 ) {
   const originalSize = await getFileSize(imageUri);
 
+  // v1.4.x createResizedImage(path, width, height, format, quality, rotation, outputPath)
   const response = await ImageResizer.createResizedImage(
     imageUri,
     width,
     height,
-    format,
-    quality,
-    0,         // rotation
-    undefined, // outputPath (use temp)
-    false,     // keepMeta
-    {
-      mode: 'contain',
-      onlyScaleDown: false,
-    },
+    format,   // 'JPEG' | 'PNG' | 'WEBP'
+    quality,  // 0-100
+    0,        // rotation
+    undefined, // use cache dir
   );
 
   const resizedSize = await getFileSize(response.uri);
