@@ -8,27 +8,29 @@ import {
   ScrollView,
   StatusBar,
   Dimensions,
+  Image,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import {colors, typography, spacing, radius} from '../theme/theme';
+import Icon from 'react-native-vector-icons/Feather';
 
 const {width} = Dimensions.get('window');
 
 const FEATURES = [
   {
-    id: 'compress', icon: '⚡', title: 'Compress', subtitle: 'Reduce file size',
+    id: 'compress', icon: 'minimize', title: 'Compress', subtitle: 'Reduce file size',
     gradient: ['#00F5FF', '#0080FF'], screen: 'Compress', glow: colors.accent.cyan,
   },
   {
-    id: 'resize', icon: '⊞', title: 'Resize', subtitle: 'Custom dimensions',
+    id: 'resize', icon: 'crop', title: 'Resize', subtitle: 'Custom dimensions',
     gradient: ['#BF5AF2', '#6E40C9'], screen: 'Resize', glow: colors.accent.purple,
   },
   {
-    id: 'convert', icon: '⇄', title: 'Convert', subtitle: 'JPEG · PNG · WebP',
+    id: 'convert', icon: 'refresh-cw', title: 'Convert', subtitle: 'JPEG · PNG · WebP',
     gradient: ['#30D158', '#25A244'], screen: 'Convert', glow: colors.accent.green,
   },
   {
-    id: 'batch', icon: '⊛', title: 'Batch', subtitle: 'Process multiple',
+    id: 'batch', icon: 'layers', title: 'Batch', subtitle: 'Process multiple',
     gradient: ['#FF9F0A', '#FF6B00'], screen: 'Batch', glow: colors.accent.orange,
   },
 ];
@@ -37,7 +39,7 @@ const FeatureCard = ({feature, onPress}) => {
   const scale = useRef(new Animated.Value(1)).current;
 
   return (
-    <Animated.View style={{transform: [{scale}], flex: 1, margin: spacing.sm}}>
+    <Animated.View style={{transform: [{scale}], width: CARD_SIZE, margin: spacing.sm}}>
       <TouchableOpacity
         onPress={onPress}
         onPressIn={() => Animated.spring(scale, {toValue: 0.96, useNativeDriver: true, speed: 20}).start()}
@@ -50,13 +52,13 @@ const FeatureCard = ({feature, onPress}) => {
           <LinearGradient colors={feature.gradient} start={{x: 0, y: 0}} end={{x: 1, y: 0}} style={styles.accentLine} />
           <View style={styles.cardContent}>
             <View style={[styles.iconCircle, {backgroundColor: `${feature.glow}1A`, borderColor: `${feature.glow}30`}]}>
-              <Text style={styles.icon}>{feature.icon}</Text>
+              <Icon name={feature.icon} size={22} color={feature.glow} />
             </View>
             <Text style={styles.cardTitle}>{feature.title}</Text>
             <Text style={styles.cardSubtitle}>{feature.subtitle}</Text>
           </View>
           <View style={styles.arrow}>
-            <Text style={[styles.arrowText, {color: feature.glow}]}>›</Text>
+            <Icon name="chevron-right" size={20} color={feature.glow} />
           </View>
         </LinearGradient>
       </TouchableOpacity>
@@ -65,59 +67,85 @@ const FeatureCard = ({feature, onPress}) => {
 };
 
 const HomeScreen = ({navigation}) => {
+  const heroOpacity = useRef(new Animated.Value(0)).current;
+  const heroTranslate = useRef(new Animated.Value(20)).current;
+  const gridOpacity = useRef(new Animated.Value(0)).current;
+  const gridTranslate = useRef(new Animated.Value(20)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  React.useEffect(() => {
+    Animated.stagger(150, [
+      Animated.parallel([
+        Animated.timing(heroOpacity, {toValue: 1, duration: 500, useNativeDriver: true}),
+        Animated.spring(heroTranslate, {toValue: 0, tension: 50, friction: 7, useNativeDriver: true})
+      ]),
+      Animated.parallel([
+        Animated.timing(gridOpacity, {toValue: 1, duration: 500, useNativeDriver: true}),
+        Animated.spring(gridTranslate, {toValue: 0, tension: 50, friction: 7, useNativeDriver: true})
+      ])
+    ]).start();
+
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {toValue: 1.2, duration: 1000, useNativeDriver: true}),
+        Animated.timing(pulseAnim, {toValue: 1, duration: 1000, useNativeDriver: true})
+      ])
+    ).start();
+  }, []);
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={colors.bg.primary} />
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* Hero */}
-        <LinearGradient colors={['#0D1525', colors.bg.primary]} style={styles.hero}>
-          <View style={styles.logoRow}>
-            <LinearGradient colors={colors.gradient.cyanPurple} style={styles.logoBox}>
-              <Text style={styles.logoChar}>N</Text>
-            </LinearGradient>
-            <View>
-              <Text style={styles.appName}>NanoImage</Text>
-              <Text style={styles.appTagline}>Advanced Image Optimizer</Text>
+        <Animated.View style={{opacity: heroOpacity, transform: [{translateY: heroTranslate}]}}>
+          <LinearGradient colors={['#0D1525', colors.bg.primary]} style={styles.hero}>
+            <View style={[styles.logoRow, {justifyContent: 'center'}]}>
+              <Image source={require('../../logo.png')} style={styles.fullLogoImage} resizeMode="contain" />
+            </View>
+            <View style={styles.statRow}>
+              {['JPEG', 'PNG', 'WebP'].map((s, i) => (
+                <View key={i} style={styles.statPill}>
+                  <Text style={styles.statVal}>{s}</Text>
+                </View>
+              ))}
+            </View>
+            <Text style={styles.heroSubtext}>Compress · Resize · Convert · Batch Process</Text>
+          </LinearGradient>
+        </Animated.View>
+
+        {/* Feature Grid & Info Banner */}
+        <Animated.View style={{opacity: gridOpacity, transform: [{translateY: gridTranslate}]}}>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>TOOLS</Text>
+            <View style={styles.grid}>
+              {FEATURES.map((feature, index) => (
+                <FeatureCard
+                  key={feature.id}
+                  feature={feature}
+                  onPress={() => navigation.navigate(feature.screen)}
+                />
+              ))}
             </View>
           </View>
-          <View style={styles.statRow}>
-            {['JPEG', 'PNG', 'WebP'].map((s, i) => (
-              <View key={i} style={styles.statPill}>
-                <Text style={styles.statVal}>{s}</Text>
-              </View>
-            ))}
-          </View>
-          <Text style={styles.heroSubtext}>Compress · Resize · Convert · Batch Process</Text>
-        </LinearGradient>
 
-        {/* Feature Grid */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>TOOLS</Text>
-          <View style={styles.grid}>
-            {FEATURES.map((feature, index) => (
-              <FeatureCard
-                key={feature.id}
-                feature={feature}
-                onPress={() => navigation.navigate(feature.screen)}
-              />
-            ))}
+          {/* Info Banner */}
+          <View style={styles.infoBanner}>
+            <LinearGradient
+              colors={['rgba(0,245,255,0.05)', 'rgba(191,90,242,0.05)']}
+              start={{x: 0, y: 0}} end={{x: 1, y: 0}}
+              style={styles.infoGradient}>
+              <Animated.View style={{transform: [{scale: pulseAnim}]}}>
+                <Icon name="info" size={20} color={colors.accent.cyan} style={styles.infoIcon} />
+              </Animated.View>
+              <Text style={styles.infoText}>
+                Tip: Use{' '}
+                <Text style={{color: colors.accent.orange, fontWeight: '600'}}>Batch Compress</Text>
+                {' '}to process multiple images at once with progress tracking.
+              </Text>
+            </LinearGradient>
           </View>
-        </View>
-
-        {/* Info Banner */}
-        <View style={styles.infoBanner}>
-          <LinearGradient
-            colors={['rgba(0,245,255,0.05)', 'rgba(191,90,242,0.05)']}
-            start={{x: 0, y: 0}} end={{x: 1, y: 0}}
-            style={styles.infoGradient}>
-            <Text style={styles.infoIcon}>💡</Text>
-            <Text style={styles.infoText}>
-              Tip: Use{' '}
-              <Text style={{color: colors.accent.orange, fontWeight: '600'}}>Batch Compress</Text>
-              {' '}to process multiple images at once with progress tracking.
-            </Text>
-          </LinearGradient>
-        </View>
+        </Animated.View>
         <View style={{height: spacing.xxxl}} />
       </ScrollView>
     </View>
@@ -134,10 +162,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.base, alignItems: 'center',
   },
   logoRow: {flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg},
-  logoBox: {width: 52, height: 52, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center'},
-  logoChar: {fontSize: 28, fontWeight: typography.weights.extrabold, color: colors.text.inverse},
-  appName: {fontSize: typography.sizes.xxl, fontWeight: typography.weights.extrabold, color: colors.text.primary, letterSpacing: -0.5},
-  appTagline: {fontSize: typography.sizes.sm, color: colors.text.secondary, letterSpacing: 0.5},
+  fullLogoImage: {width: 280, height: 80},
   statRow: {flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md},
   statPill: {
     paddingHorizontal: spacing.md, paddingVertical: 4, borderRadius: radius.full,
