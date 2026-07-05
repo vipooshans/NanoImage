@@ -8,6 +8,7 @@ import {
   ScrollView,
   StatusBar,
   Dimensions,
+  Image,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import {colors, typography, spacing, radius} from '../theme/theme';
@@ -99,14 +100,8 @@ const HomeScreen = ({navigation}) => {
         {/* Hero */}
         <Animated.View style={{opacity: heroOpacity, transform: [{translateY: heroTranslate}]}}>
           <LinearGradient colors={['#0D1525', colors.bg.primary]} style={styles.hero}>
-            <View style={styles.logoRow}>
-              <LinearGradient colors={colors.gradient.cyanPurple} style={styles.logoBox}>
-                <Text style={styles.logoChar}>N</Text>
-              </LinearGradient>
-              <View>
-                <Text style={styles.appName}>NanoImage</Text>
-                <Text style={styles.appTagline}>Advanced Image Optimizer</Text>
-              </View>
+            <View style={[styles.logoRow, {justifyContent: 'center'}]}>
+              <Image source={require('../../logo.png')} style={styles.fullLogoImage} resizeMode="contain" />
             </View>
             <View style={styles.statRow}>
               {['JPEG', 'PNG', 'WebP'].map((s, i) => (
@@ -167,10 +162,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.base, alignItems: 'center',
   },
   logoRow: {flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg},
-  logoBox: {width: 52, height: 52, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center'},
-  logoChar: {fontSize: 28, fontWeight: typography.weights.extrabold, color: colors.text.inverse},
-  appName: {fontSize: typography.sizes.xxl, fontWeight: typography.weights.extrabold, color: colors.text.primary, letterSpacing: -0.5},
-  appTagline: {fontSize: typography.sizes.sm, color: colors.text.secondary, letterSpacing: 0.5},
+  fullLogoImage: {width: 280, height: 80},
   statRow: {flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md},
   statPill: {
     paddingHorizontal: spacing.md, paddingVertical: 4, borderRadius: radius.full,
