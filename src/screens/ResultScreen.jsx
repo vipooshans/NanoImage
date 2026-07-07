@@ -15,7 +15,7 @@ import {colors, typography, spacing, radius} from '../theme/theme';
 import Header from '../components/Header';
 import GlassCard from '../components/GlassCard';
 import ActionButton from '../components/ActionButton';
-import ImagePreview from '../components/ImagePreview';
+import ComparisonSlider from '../components/ComparisonSlider';
 import StatBadge from '../components/StatBadge';
 import {saveToGallery} from '../services/fileService';
 import {formatSize, calcReduction, calcReductionNumber, reductionColor} from '../utils/formatSize';
@@ -106,34 +106,11 @@ const ResultScreen = ({navigation, route}) => {
           )}
         </LinearGradient>
 
-        {/* Before / After Previews */}
+        {/* Before / After Slider */}
         <GlassCard style={styles.card}>
-          <Text style={styles.cardTitle}>Before vs After</Text>
-          <View style={styles.compareRow}>
-            <View style={[styles.compareItem, {maxWidth: PREVIEW_SIZE}]}>
-              <ImagePreview
-                uri={originalUri}
-                label="Original"
-                fileSize={originalSize}
-                accent="red"
-                style={styles.compareImg}
-              />
-            </View>
-            <View style={styles.vsContainer}>
-              <View style={styles.vsBadge}>
-                <Text style={styles.vsText}>VS</Text>
-              </View>
-            </View>
-            <View style={[styles.compareItem, {maxWidth: PREVIEW_SIZE}]}>
-              <ImagePreview
-                uri={outputUri}
-                label="Optimized"
-                fileSize={processedSize}
-                accent="green"
-                style={styles.compareImg}
-              />
-            </View>
-          </View>
+          <Text style={styles.cardTitle}>Interactive Comparison</Text>
+          <Text style={{color: colors.text.muted, fontSize: 13, marginBottom: 8}}>Drag slider to compare</Text>
+          <ComparisonSlider beforeUri={originalUri} afterUri={outputUri} />
         </GlassCard>
 
         {/* File Size Stats */}
@@ -249,33 +226,7 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     marginBottom: spacing.md,
   },
-  compareRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 0,
-  },
-  compareItem: {flex: 1},
-  compareImg: {aspectRatio: undefined, height: 180},
-  vsContainer: {
-    paddingHorizontal: spacing.xs,
-    alignItems: 'center',
-  },
-  vsBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  vsText: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.bold,
-    color: colors.text.secondary,
-    letterSpacing: 0.5,
-  },
+
   statsRow: {
     flexDirection: 'row',
     alignItems: 'center',
