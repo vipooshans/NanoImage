@@ -7,7 +7,9 @@ import {
   StatusBar,
   TouchableOpacity,
   FlatList,
+  ActivityIndicator,
 } from 'react-native';
+import Animated, {FadeInDown, Layout} from 'react-native-reanimated';
 import {launchImageLibrary} from 'react-native-image-picker';
 import {colors, typography, spacing, radius} from '../theme/theme';
 import Header from '../components/Header';
@@ -34,14 +36,22 @@ const STATUS_ICONS = {
   error: '✕',
 };
 
-const BatchItem = ({item}) => {
+const BatchItem = ({item, index = 0}) => {
   const statusColor = STATUS_COLORS[item.status] || colors.text.muted;
   const icon = STATUS_ICONS[item.status] || '○';
 
   return (
-    <View style={styles.batchItem}>
-      <View style={[styles.statusDot, {backgroundColor: statusColor}]}>
-        <Text style={styles.statusDotText}>{icon}</Text>
+    <Animated.View 
+      entering={FadeInDown.delay(index * 50).springify()} 
+      layout={Layout.springify()}
+      style={styles.batchItem}
+    >
+      <View style={[styles.statusDot, {backgroundColor: item.status === 'processing' ? 'transparent' : statusColor}]}>
+        {item.status === 'processing' ? (
+          <ActivityIndicator size="small" color={colors.accent.purple} />
+        ) : (
+          <Text style={styles.statusDotText}>{icon}</Text>
+        )}
       </View>
       <View style={styles.itemInfo}>
         <Text style={styles.itemName} numberOfLines={1}>
@@ -63,7 +73,7 @@ const BatchItem = ({item}) => {
       <Text style={[styles.statusLabel, {color: statusColor}]}>
         {item.status.toUpperCase()}
       </Text>
-    </View>
+    </Animated.View>
   );
 };
 
@@ -182,7 +192,7 @@ const BatchScreen = ({navigation}) => {
           <GlassCard style={styles.card}>
             <Text style={styles.cardTitle}>Queue Status</Text>
             {displayList.map((item, index) => (
-              <BatchItem key={`${item.uri}-${index}`} item={item} />
+              <BatchItem key={`${item.uri}-${index}`} item={item} index={index} />
             ))}
           </GlassCard>
         )}

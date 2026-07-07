@@ -1,25 +1,34 @@
-import React, {useRef, useEffect} from 'react';
-import {View, Text, StyleSheet, Animated} from 'react-native';
+import React, {useEffect} from 'react';
+import {View, Text, StyleSheet} from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  Easing,
+} from 'react-native-reanimated';
 import {colors, typography, spacing, radius} from '../theme/theme';
 
 /**
- * ProgressBar — Animated progress bar with percentage label
+ * ProgressBar — Animated progress bar with percentage label using Reanimated
  */
 const ProgressBar = ({progress = 0, color = 'cyan', showLabel = true, label, style}) => {
-  const animatedWidth = useRef(new Animated.Value(0)).current;
+  const animatedProgress = useSharedValue(0);
 
   useEffect(() => {
-    Animated.timing(animatedWidth, {
-      toValue: Math.max(0, Math.min(1, progress)),
-      duration: 350,
-      useNativeDriver: false,
-    }).start();
-  }, [progress, animatedWidth]);
+    // Animate progress change smoothly
+    animatedProgress.value = withSpring(Math.max(0, Math.min(1, progress)), {
+      damping: 20,
+      stiffness: 90,
+    });
+  }, [progress, animatedProgress]);
 
   const barColor = colors.accent[color] || colors.accent.cyan;
-  const widthInterpolate = animatedWidth.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0%', '100%'],
+  
+  const fillStyle = useAnimatedStyle(() => {
+    return {
+      width: `${animatedProgress.value * 100}%`,
+    };
   });
 
   return (
@@ -34,7 +43,11 @@ const ProgressBar = ({progress = 0, color = 'cyan', showLabel = true, label, sty
       )}
       <View style={styles.track}>
         <Animated.View
-          style={[styles.fill, {width: widthInterpolate, backgroundColor: barColor, shadowColor: barColor}]}
+          style={[
+            styles.fill,
+            {backgroundColor: barColor, shadowColor: barColor},
+            fillStyle
+          ]}
         />
       </View>
     </View>
@@ -55,7 +68,7 @@ const styles = StyleSheet.create({
   },
   percentText: {fontSize: typography.sizes.sm, fontWeight: typography.weights.bold},
   track: {
-    height: 6,
+    height: 8,
     backgroundColor: 'rgba(255,255,255,0.08)',
     borderRadius: radius.full,
     overflow: 'hidden',

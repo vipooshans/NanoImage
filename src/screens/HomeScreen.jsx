@@ -4,12 +4,22 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Animated,
   ScrollView,
   StatusBar,
   Dimensions,
   Image,
 } from 'react-native';
+import Animated, {
+  FadeInUp,
+  FadeInDown,
+  Layout,
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 import LinearGradient from 'react-native-linear-gradient';
 import { colors, typography, spacing, radius } from '../theme/theme';
 import Icon from 'react-native-vector-icons/Feather';
@@ -35,15 +45,22 @@ const FEATURES = [
   },
 ];
 
-const FeatureCard = ({ feature, onPress }) => {
-  const scale = useRef(new Animated.Value(1)).current;
+const FeatureCard = ({ feature, onPress, index }) => {
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return { transform: [{ scale: scale.value }] };
+  });
 
   return (
-    <Animated.View style={{ transform: [{ scale }], width: CARD_SIZE, margin: spacing.sm }}>
+    <Animated.View 
+      entering={FadeInDown.delay(300 + index * 100).springify()}
+      style={[{ width: CARD_SIZE, margin: spacing.sm }, animatedStyle]}
+    >
       <TouchableOpacity
         onPress={onPress}
-        onPressIn={() => Animated.spring(scale, { toValue: 0.96, useNativeDriver: true, speed: 20 }).start()}
-        onPressOut={() => Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 20 }).start()}
+        onPressIn={() => (scale.value = withSpring(0.95))}
+        onPressOut={() => (scale.value = withSpring(1))}
         activeOpacity={1}
         style={[styles.featureCard, { shadowColor: feature.glow, borderColor: feature.glow, borderWidth: 1 }]}>
         <LinearGradient
@@ -67,38 +84,29 @@ const FeatureCard = ({ feature, onPress }) => {
 };
 
 const HomeScreen = ({ navigation }) => {
-  const heroOpacity = useRef(new Animated.Value(0)).current;
-  const heroTranslate = useRef(new Animated.Value(20)).current;
-  const gridOpacity = useRef(new Animated.Value(0)).current;
-  const gridTranslate = useRef(new Animated.Value(20)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const pulseAnim = useSharedValue(1);
 
   React.useEffect(() => {
-    Animated.stagger(150, [
-      Animated.parallel([
-        Animated.timing(heroOpacity, { toValue: 1, duration: 500, useNativeDriver: true }),
-        Animated.spring(heroTranslate, { toValue: 0, tension: 50, friction: 7, useNativeDriver: true })
-      ]),
-      Animated.parallel([
-        Animated.timing(gridOpacity, { toValue: 1, duration: 500, useNativeDriver: true }),
-        Animated.spring(gridTranslate, { toValue: 0, tension: 50, friction: 7, useNativeDriver: true })
-      ])
-    ]).start();
-
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.2, duration: 1000, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1, duration: 1000, useNativeDriver: true })
-      ])
-    ).start();
+    pulseAnim.value = withRepeat(
+      withSequence(
+        withTiming(1.2, { duration: 1000 }),
+        withTiming(1, { duration: 1000 })
+      ),
+      -1,
+      true
+    );
   }, []);
+
+  const animatedPulseStyle = useAnimatedStyle(() => {
+    return { transform: [{ scale: pulseAnim.value }] };
+  });
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={colors.bg.primary} />
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* Hero */}
-        <Animated.View style={{ opacity: heroOpacity, transform: [{ translateY: heroTranslate }] }}>
+        <Animated.View entering={FadeInUp.duration(600).springify()}>
           <LinearGradient colors={[colors.bg.secondary, colors.bg.primary]} style={styles.hero}>
             <View style={[styles.logoRow, { justifyContent: 'center' }]}>
               <Icon name="camera" size={32} color={colors.accent.cyan} style={{ marginBottom: 4 }} />
@@ -116,7 +124,7 @@ const HomeScreen = ({ navigation }) => {
         </Animated.View>
 
         {/* Feature Grid & Info Banner */}
-        <Animated.View style={{ opacity: gridOpacity, transform: [{ translateY: gridTranslate }] }}>
+        <Animated.View entering={FadeInDown.delay(200).duration(600).springify()}>
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>TOOLS</Text>
             <View style={styles.grid}>
@@ -124,6 +132,7 @@ const HomeScreen = ({ navigation }) => {
                 <FeatureCard
                   key={feature.id}
                   feature={feature}
+                  index={index}
                   onPress={() => navigation.navigate(feature.screen)}
                 />
               ))}
@@ -136,7 +145,7 @@ const HomeScreen = ({ navigation }) => {
               colors={['rgba(0,245,255,0.05)', 'rgba(191,90,242,0.05)']}
               start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
               style={styles.infoGradient}>
-              <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+              <Animated.View style={animatedPulseStyle}>
                 <Icon name="info" size={20} color={colors.accent.cyan} style={styles.infoIcon} />
               </Animated.View>
               <Text style={styles.infoText}>

@@ -2,6 +2,7 @@ import React, {useState, useCallback} from 'react';
 import {
   View, Text, StyleSheet, ScrollView, StatusBar, Alert, TouchableOpacity,
 } from 'react-native';
+import Animated, {FadeIn, FadeOut, Layout} from 'react-native-reanimated';
 import {launchImageLibrary} from 'react-native-image-picker';
 import {colors, typography, spacing, radius} from '../theme/theme';
 import Header from '../components/Header';
@@ -101,9 +102,11 @@ const CompressScreen = ({navigation}) => {
         </GlassCard>
 
         {loading && (
-          <GlassCard style={styles.card}>
-            <ProgressBar progress={progress} color="cyan" label="Compressing..." />
-          </GlassCard>
+          <Animated.View entering={FadeIn} exiting={FadeOut} layout={Layout.springify()}>
+            <GlassCard style={styles.card}>
+              <ProgressBar progress={progress} color="cyan" label="Compressing..." />
+            </GlassCard>
+          </Animated.View>
         )}
 
         {error && (
